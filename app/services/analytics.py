@@ -10,7 +10,7 @@ Definitions (also in README):
 """
 from datetime import date, datetime, time, timedelta, timezone
 
-from sqlalchemy import Date, cast, desc, func, select, text
+from sqlalchemy import desc, func, select, text
 from sqlalchemy.orm import Session
 
 from ..domain import STATUSES

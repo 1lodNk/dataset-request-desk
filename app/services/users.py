@@ -54,3 +54,7 @@ def update_user(db: Session, actor: User, user_id: int, changes: dict) -> User:
         user.password_hash = hash_password(changes["password"])
     db.commit()
     return user
+
+
+def get_by_email(db: Session, email: str) -> User | None:
+    return db.scalar(select(User).where(User.email == email.strip().lower()))
