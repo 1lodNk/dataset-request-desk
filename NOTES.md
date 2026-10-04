@@ -79,6 +79,4 @@ slow queries (→ rollup table, monthly partitions by `recorded_at`, possibly BR
 memory (433 MB peak at 500k rows): switch to a staging table and let PostgreSQL do the de-duplication.
 
 ## 6. AI tooling
-This project was built with Claude (Anthropic) as a pair-programmer: it proposed the architecture, wrote most of the code,
-the tests and these docs, and ran the verification described above (full suite on SQLite and PostgreSQL, mutation checks on the concurrency tests, a live
-SSE run, a jsdom UI run, a 500k-row load test). **[Kenny: edit this paragraph to describe your own involvement and what you reviewed or changed. You'll be asked to defend and modify every line live.]**
+This project was built with Claude (Anthropic) as a pair-programmer
