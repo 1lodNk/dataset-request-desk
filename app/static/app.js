@@ -79,7 +79,7 @@ async function attempt(fn, okMessage) {   // run an action, surface errors as to
 function signIn(payload) {
   state.token = payload.access_token; state.user = payload.user;
   sessionStorage.setItem('token', state.token); sessionStorage.setItem('user', JSON.stringify(state.user));
-  location.hash = '#/requests';
+  if (!location.hash) location.hash = '#/requests';  // keep a deep link the user arrived with
   boot();
 }
 function signOut(message) {

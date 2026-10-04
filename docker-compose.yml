@@ -1,0 +1,43 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: desk
+      POSTGRES_PASSWORD: desk
+      POSTGRES_DB: desk
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/initdb:/docker-entrypoint-initdb.d:ro   # also creates the desk_test database
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U desk -d desk"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build: .
+    depends_on:
+      db: { condition: service_healthy }
+    environment:
+      DATABASE_URL: postgresql+psycopg://desk:desk@db:5432/desk
+      JWT_SECRET: ${JWT_SECRET:-dev-only-insecure-secret-change-me}
+      APP_ENV: development
+      SEED_USERS: "1"      # demo accounts from seed/users.json (never enable in production)
+      SEED_EPISODES: "1"   # import seed/episodes.csv (idempotent)
+    ports:
+      - "8000:8000"
+
+  tests:                   # docker compose run --rm tests   (full suite incl. concurrency tests, on PostgreSQL)
+    profiles: ["test"]
+    build:
+      context: .
+      args: { INSTALL_DEV: "1" }
+    depends_on:
+      db: { condition: service_healthy }
+    environment:
+      TEST_DATABASE_URL: postgresql+psycopg://desk:desk@db:5432/desk_test
+    entrypoint: []
+    command: ["pytest"]
+
+volumes:
+  pgdata:
