@@ -11,15 +11,35 @@ jobs:
         options: >-
           --health-cmd "pg_isready -U desk" --health-interval 5s --health-timeout 5s --health-retries 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with: { python-version: "3.12", cache: pip, cache-dependency-path: requirements-dev.txt }
       - run: pip install -r requirements-dev.txt
-      - name: Tests on SQLite
-        run: python -m pytest
+      - name: Ruff lint
+        run: python -m ruff check app tests migrations
+      - name: Mypy type check
+        run: python -m mypy app
+      - name: Tests on SQLite with coverage report
+        run: python -m pytest --cov=app --cov-report=term-missing --cov-fail-under=90
       - name: Tests on PostgreSQL (includes concurrency tests)
         run: python -m pytest
         env: { TEST_DATABASE_URL: "postgresql+psycopg://desk:desk@localhost:5432/desk_test" }
       - name: Migrations round-trip on PostgreSQL
         run: alembic upgrade head && alembic downgrade base && alembic upgrade head
         env: { DATABASE_URL: "postgresql+psycopg://desk:desk@localhost:5432/desk_test" }
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install locked frontend dependencies
+        working-directory: frontend
+        run: npm ci
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build

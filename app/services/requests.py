@@ -1,5 +1,5 @@
 """Dataset requests: creation, listing, and the status workflow (the heart of the domain rules)."""
-from datetime import date, datetime
+from datetime import date
 
 from sqlalchemy import desc, func, select
 from sqlalchemy.orm import Session
@@ -124,7 +124,9 @@ def transition(db: Session, actor: User, request_id: int, to_status: str, commen
             code="role_not_allowed",
         )
     if to_status == "delivered":
-        assigned = db.scalar(select(func.count(Assignment.id)).where(Assignment.request_id == req.id))
+        assigned = db.execute(
+            select(func.count(Assignment.id)).where(Assignment.request_id == req.id)
+        ).scalar_one()
         if assigned < req.episodes_requested:
             raise Conflict(
                 f"request needs {req.episodes_requested} episodes but only {assigned} are assigned",

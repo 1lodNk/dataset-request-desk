@@ -17,7 +17,9 @@ from .requests import get_request_row
 
 
 def _count(db: Session, request_id: int) -> int:
-    return db.scalar(select(func.count(Assignment.id)).where(Assignment.request_id == request_id))
+    return db.execute(
+        select(func.count(Assignment.id)).where(Assignment.request_id == request_id)
+    ).scalar_one()
 
 
 def _require_open(req) -> None:
@@ -79,14 +81,13 @@ def unassign(db: Session, actor: User, request_id: int, episode_id: str) -> dict
     req = get_request_row(db, actor, request_id, lock=True)
     _require_open(req)
     ep_pk = db.scalar(select(Episode.id).where(Episode.episode_id == episode_id.strip().upper()))
-    deleted = 0
-    if ep_pk is not None:
-        deleted = db.execute(
-            delete(Assignment).where(Assignment.request_id == req.id, Assignment.episode_id == ep_pk)
-        ).rowcount
-    if not deleted:
+    assignment_id = None if ep_pk is None else db.scalar(
+        select(Assignment.id).where(Assignment.request_id == req.id, Assignment.episode_id == ep_pk)
+    )
+    if assignment_id is None:
         db.rollback()
         raise NotFound("that episode is not assigned to this request")
+    db.execute(delete(Assignment).where(Assignment.id == assignment_id))
     db.commit()
     count = _count(db, req.id)
     broker.publish({"type": "request.assignments_changed", "request_id": req.id,
