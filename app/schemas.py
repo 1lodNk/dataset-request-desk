@@ -1,7 +1,7 @@
 """Request/response models (pydantic v2). Input models are strict about what they accept."""
 import re
 from datetime import date, datetime
-from typing import Generic, Literal, TypeVar
+from typing import Generic, Literal, TypeVar, get_args
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -14,8 +14,8 @@ _EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 Role = Literal["client", "operator", "admin"]
 Status = Literal["submitted", "in_progress", "delivered", "accepted", "rejected"]
 Quality = Literal["good", "usable", "bad"]
-assert set(ROLES) == set(Role.__args__) and set(STATUSES) == set(Status.__args__)  # keep in sync
-assert set(QUALITIES) == set(Quality.__args__)
+assert set(ROLES) == set(get_args(Role)) and set(STATUSES) == set(get_args(Status))  # keep in sync
+assert set(QUALITIES) == set(get_args(Quality))
 
 
 class ORM(BaseModel):
