@@ -28,25 +28,18 @@ jobs:
         run: alembic upgrade head && alembic downgrade base && alembic upgrade head
         env: { DATABASE_URL: "postgresql+psycopg://desk:desk@localhost:5432/desk_test" }
 
-  frontend-lock-bootstrap:
+  frontend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
-        with: { node-version: "24" }
-      - name: Generate exact frontend dependencies and lockfile
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install locked frontend dependencies
         working-directory: frontend
-        run: |
-          npm install --save-exact react@latest react-dom@latest
-          npm install --save-dev --save-exact vite@latest @vitejs/plugin-react@latest
-          npm run build
-      - name: Export generated lockfile for repository update (temporary)
-        run: |
-          echo PACKAGE_JSON_B64_BEGIN
-          base64 -w0 frontend/package.json
-          echo
-          echo PACKAGE_JSON_B64_END
-          echo PACKAGE_LOCK_B64_BEGIN
-          base64 -w0 frontend/package-lock.json
-          echo
-          echo PACKAGE_LOCK_B64_END
+        run: npm ci
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
