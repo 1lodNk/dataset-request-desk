@@ -20,7 +20,7 @@ from collections import Counter
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-from typing import Any, BinaryIO
+from typing import Any, BinaryIO, cast
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -218,10 +218,10 @@ def _insert_ignore(db: Session) -> Any:
     if db.get_bind().dialect.name == "postgresql":
         from sqlalchemy.dialects.postgresql import insert as pg_insert
 
-        return pg_insert(Episode.__table__)
+        return pg_insert(cast(Any, Episode.__table__))
     from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
-    return sqlite_insert(Episode.__table__)
+    return sqlite_insert(cast(Any, Episode.__table__))
 
 
 def _flush(db: Session, batch: list, run: ImportRun, report: Report) -> None:
